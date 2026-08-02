@@ -9,7 +9,11 @@
 export interface AuthUser {
   id: string;
   /** @nullable */
-  name?: string | null;
+  email: string | null;
   /** @nullable */
-  profileImage?: string | null;
+  firstName: string | null;
+  /** @nullable */
+  lastName: string | null;
+  /** @nullable */
+  profileImageUrl: string | null;
 }

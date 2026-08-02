@@ -1,22 +1,30 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Toaster } from '@/components/ui/toaster';
-import { TooltipProvider } from '@/components/ui/tooltip';
-import NotFound from '@/pages/not-found';
+import { Toaster } from 'sonner';
 import { Route, Switch, Router as WouterRouter } from 'wouter';
+import { AppLayout } from '@/components/layout/AppLayout';
 
-const queryClient = new QueryClient();
+import Landing from '@/pages/Landing';
+import Dashboard from '@/pages/Dashboard';
+import CreateResource from '@/pages/CreateResource';
+import History from '@/pages/History';
+import Account from '@/pages/Account';
 
-function Home() {
+import { ThemeProvider } from '@/components/theme-provider';
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
+
+function NotFound() {
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-gray-50">
-      <div className="text-center">
-        <h1 className="text-2xl font-bold text-gray-900">
-          Replit Agent is building...
-        </h1>
-        <p className="mt-2 text-sm text-gray-600">
-          Your app will appear here once it's ready.
-        </p>
-      </div>
+    <div className="min-h-screen w-full flex flex-col items-center justify-center bg-background text-foreground">
+      <h1 className="text-4xl font-bold mb-2">404</h1>
+      <p className="text-muted-foreground">Page not found.</p>
     </div>
   );
 }
@@ -24,7 +32,19 @@ function Home() {
 function Router() {
   return (
     <Switch>
-      <Route path="/" component={Home} />
+      <Route path="/" component={Landing} />
+      <Route path="/dashboard">
+        <AppLayout><Dashboard /></AppLayout>
+      </Route>
+      <Route path="/create">
+        <AppLayout><CreateResource /></AppLayout>
+      </Route>
+      <Route path="/history">
+        <AppLayout><History /></AppLayout>
+      </Route>
+      <Route path="/account">
+        <AppLayout><Account /></AppLayout>
+      </Route>
       <Route component={NotFound} />
     </Switch>
   );
@@ -32,14 +52,14 @@ function Router() {
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
+    <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
+      <QueryClientProvider client={queryClient}>
         <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, '')}>
           <Router />
         </WouterRouter>
-        <Toaster />
-      </TooltipProvider>
-    </QueryClientProvider>
+        <Toaster position="top-right" />
+      </QueryClientProvider>
+    </ThemeProvider>
   );
 }
 
