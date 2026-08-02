@@ -6,6 +6,9 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface HealthStatus {
-  status: string;
-}
+export type ListResourcesParams = {
+search?: string;
+resource_type?: string;
+page?: number;
+limit?: number;
+};

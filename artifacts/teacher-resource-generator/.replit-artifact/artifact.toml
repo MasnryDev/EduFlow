@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "AI Teacher Resource Generator"
+description = "A SaaS web app that helps teachers generate high-quality teaching resources (lesson plans, worksheets, assessments, activities, PowerPoint outlines, curriculum planners) in under one minute using AI. Includes a marketing landing page, Supabase auth, dashboard, resource generation with OpenAI, resource history, and account management."
+version = "1.0.0"
+id = "artifacts/teacher-resource-generator"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 18273
+
+[services.development]
+run = "pnpm --filter @workspace/teacher-resource-generator run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/teacher-resource-generator", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/teacher-resource-generator/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "18273"
+BASE_PATH = "/"
