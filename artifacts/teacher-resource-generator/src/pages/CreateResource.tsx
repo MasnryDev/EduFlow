@@ -11,14 +11,14 @@ import { toast } from "sonner"
 import { Loader2, Copy, Save, Sparkles, RefreshCcw, FilePlus2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
-const SUBJECTS = ["English", "Mathematics", "Science", "HASS", "The Arts", "Technologies", "Health and Physical Education", "Languages"]
+const SUBJECTS = ["English", "Mathematics", "Science", "Humanities", "The Arts", "Technologies", "Health and Physical Education", "Languages"]
 const YEAR_LEVELS = ["Foundation", "Year 1", "Year 2", "Year 3", "Year 4", "Year 5", "Year 6", "Year 7", "Year 8", "Year 9", "Year 10", "Year 11", "Year 12"]
 const RESOURCE_TYPES = ["Lesson Plan", "Worksheet", "Assessment", "Classroom Activity", "PowerPoint Outline", "Curriculum Planner"]
 const DURATIONS = ["30 minutes", "45 minutes", "60 minutes", "90 minutes", "2 hours", "Full day"]
 const DIFFICULTIES = ["Beginner", "Intermediate", "Advanced"]
 
 const selectCls = cn(
-  "flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm",
+  "flex h-9 w-full rounded-md border border-input bg-background text-foreground px-3 py-1 text-sm shadow-sm",
   "transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
   "disabled:cursor-not-allowed disabled:opacity-50"
 )
@@ -59,8 +59,9 @@ export default function CreateResource() {
           setResult({ title: data.title, content: data.content, savedId: null })
           toast.success("Resource generated successfully!")
         },
-        onError: () => {
-          toast.error("Failed to generate resource. Please try again.")
+        onError: (error: any) => {
+          const msg = error?.response?.data?.error || error?.message || "Failed to generate resource. Please try again."
+          toast.error(msg, { duration: 8000 })
         }
       }
     )

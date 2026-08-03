@@ -122,6 +122,16 @@
   }
 }
 
+/* Native select options — browser default colours are often unreadable */
+select {
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+}
+select option {
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+}
+
 .prose h1, .prose h2, .prose h3 {
   color: hsl(var(--foreground));
 }

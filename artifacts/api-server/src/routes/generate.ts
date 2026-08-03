@@ -167,12 +167,16 @@ router.post("/generate", async (req, res): Promise<void> => {
     }
 
     res.json(GenerateResourceResponse.parse({ content, title }));
-  } catch (err) {
+  } catch (err: any) {
     req.log.error({ err }, "AI generation failed");
     if (err instanceof Error && err.message.includes("OPENAI_API_KEY")) {
-      res.status(500).json({ error: "OpenAI API key not configured" });
+      res.status(500).json({ error: "OpenAI API key not configured. Please add your OPENAI_API_KEY secret." });
+    } else if (err?.status === 429 || err?.code === "credit_balance_exhausted") {
+      res.status(402).json({ error: "Your OpenAI account has no credits remaining. Please add credits at platform.openai.com/settings/organization/billing to continue generating resources." });
+    } else if (err?.status === 401) {
+      res.status(401).json({ error: "Invalid OpenAI API key. Please check your OPENAI_API_KEY secret." });
     } else {
-      res.status(500).json({ error: "AI generation failed. Please try again." });
+      res.status(500).json({ error: `AI generation failed: ${err instanceof Error ? err.message : "unknown error"}` });
     }
   }
 });
