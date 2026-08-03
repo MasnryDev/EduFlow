@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Skeleton } from "@/components/ui/skeleton"
-import { UserCircle, Shield, LogOut, Check, Badge } from "lucide-react"
+import { UserCircle, Shield, LogOut, Check } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
 import { toast } from "sonner"
 
 export default function Account() {

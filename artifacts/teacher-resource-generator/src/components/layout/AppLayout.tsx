@@ -7,7 +7,7 @@ import { ModeToggle } from "@/components/mode-toggle"
 import { cn } from "@/lib/utils"
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, isLoading, logout } = useAuth()
+  const { isAuthenticated, isLoading, login, logout } = useAuth()
   const [location] = useLocation()
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false)
 

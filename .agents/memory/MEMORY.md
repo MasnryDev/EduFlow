@@ -1,0 +1,3 @@
+- [OpenAPI Zod v3 constraints](openapi-zod-v3.md) — Orval + Zod v3: use `number` not `integer`; never use `format: email` or `format: uri`.
+- [replit-auth-web lib setup](replit-auth-web-setup.md) — lib needs vite devDep + `"types": ["vite/client"]` in tsconfig + composite build config.
+- [Radix Select vs native select](radix-vs-native-select.md) — Radix UI Select won't accept native `onChange`/`<option>` children; use a styled native `<select>` instead.

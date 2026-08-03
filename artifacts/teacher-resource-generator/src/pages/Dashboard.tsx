@@ -11,7 +11,7 @@ export default function Dashboard() {
   const { user } = useAuth()
   const { data: stats, isLoading } = useGetStats({ query: { queryKey: getGetStatsQueryKey() } })
 
-  const displayName = user?.name || "Teacher"
+  const displayName = user?.firstName || user?.lastName || "Teacher"
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">

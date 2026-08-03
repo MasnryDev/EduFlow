@@ -1,20 +1,31 @@
 import * as React from "react"
+import { marked } from "marked"
 import { useGenerateResource, useCreateResource } from "@workspace/api-client-react"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Select } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { toast } from "sonner"
 import { Loader2, Copy, Save, Sparkles, RefreshCcw, FilePlus2 } from "lucide-react"
+import { cn } from "@/lib/utils"
 
 const SUBJECTS = ["English", "Mathematics", "Science", "HASS", "The Arts", "Technologies", "Health and Physical Education", "Languages"]
 const YEAR_LEVELS = ["Foundation", "Year 1", "Year 2", "Year 3", "Year 4", "Year 5", "Year 6", "Year 7", "Year 8", "Year 9", "Year 10", "Year 11", "Year 12"]
 const RESOURCE_TYPES = ["Lesson Plan", "Worksheet", "Assessment", "Classroom Activity", "PowerPoint Outline", "Curriculum Planner"]
 const DURATIONS = ["30 minutes", "45 minutes", "60 minutes", "90 minutes", "2 hours", "Full day"]
 const DIFFICULTIES = ["Beginner", "Intermediate", "Advanced"]
+
+const selectCls = cn(
+  "flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm",
+  "transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
+  "disabled:cursor-not-allowed disabled:opacity-50"
+)
+
+function renderMarkdown(md: string): string {
+  return marked.parse(md, { async: false }) as string
+}
 
 export default function CreateResource() {
   const generateMutation = useGenerateResource()
@@ -94,40 +105,43 @@ export default function CreateResource() {
             <Sparkles className="w-5 h-5 text-primary" /> Generator
           </h2>
         </div>
-        <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
+        <div className="flex-1 overflow-y-auto p-4">
           <form id="generate-form" onSubmit={handleGenerate} className="space-y-5">
             
             <div className="space-y-1.5">
               <Label htmlFor="resourceType">Resource Type</Label>
-              <Select 
-                id="resourceType" 
-                value={formData.resourceType} 
+              <select
+                id="resourceType"
+                className={selectCls}
+                value={formData.resourceType}
                 onChange={(e) => setFormData({...formData, resourceType: e.target.value})}
               >
                 {RESOURCE_TYPES.map(rt => <option key={rt} value={rt}>{rt}</option>)}
-              </Select>
+              </select>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <Label htmlFor="subject">Subject</Label>
-                <Select 
-                  id="subject" 
-                  value={formData.subject} 
+                <select
+                  id="subject"
+                  className={selectCls}
+                  value={formData.subject}
                   onChange={(e) => setFormData({...formData, subject: e.target.value})}
                 >
                   {SUBJECTS.map(s => <option key={s} value={s}>{s}</option>)}
-                </Select>
+                </select>
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="yearLevel">Year Level</Label>
-                <Select 
-                  id="yearLevel" 
-                  value={formData.yearLevel} 
+                <select
+                  id="yearLevel"
+                  className={selectCls}
+                  value={formData.yearLevel}
                   onChange={(e) => setFormData({...formData, yearLevel: e.target.value})}
                 >
                   {YEAR_LEVELS.map(y => <option key={y} value={y}>{y}</option>)}
-                </Select>
+                </select>
               </div>
             </div>
 
@@ -156,23 +170,25 @@ export default function CreateResource() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <Label htmlFor="duration">Duration</Label>
-                <Select 
-                  id="duration" 
-                  value={formData.duration} 
+                <select
+                  id="duration"
+                  className={selectCls}
+                  value={formData.duration}
                   onChange={(e) => setFormData({...formData, duration: e.target.value})}
                 >
                   {DURATIONS.map(d => <option key={d} value={d}>{d}</option>)}
-                </Select>
+                </select>
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="difficulty">Difficulty</Label>
-                <Select 
-                  id="difficulty" 
-                  value={formData.difficulty} 
+                <select
+                  id="difficulty"
+                  className={selectCls}
+                  value={formData.difficulty}
                   onChange={(e) => setFormData({...formData, difficulty: e.target.value})}
                 >
                   {DIFFICULTIES.map(d => <option key={d} value={d}>{d}</option>)}
-                </Select>
+                </select>
               </div>
             </div>
 
@@ -211,7 +227,7 @@ export default function CreateResource() {
           <div className="flex-1 flex flex-col items-center justify-center p-8 text-center text-muted-foreground animate-pulse">
             <Sparkles className="w-12 h-12 mb-4 text-primary opacity-50" />
             <h3 className="text-xl font-bold text-foreground">Drafting your resource...</h3>
-            <p className="max-w-sm mt-2">Our AI is analyzing the curriculum standards and structuring your {formData.resourceType.toLowerCase()}.</p>
+            <p className="max-w-sm mt-2">Our AI is analysing the curriculum standards and structuring your {formData.resourceType.toLowerCase()}.</p>
           </div>
         ) : result ? (
           <>
@@ -243,20 +259,10 @@ export default function CreateResource() {
                 </Button>
               </div>
             </div>
-            <div className="flex-1 overflow-y-auto p-6 lg:p-8 bg-background custom-scrollbar">
+            <div className="flex-1 overflow-y-auto p-6 lg:p-8 bg-background">
               <div 
                 className="prose prose-sm md:prose-base dark:prose-invert max-w-none prose-headings:font-bold prose-a:text-primary prose-strong:text-foreground prose-li:my-0.5"
-                dangerouslySetInnerHTML={{ 
-                  __html: result.content
-                    .replace(/^### (.*$)/gim, '<h3>$1</h3>')
-                    .replace(/^## (.*$)/gim, '<h2>$1</h2>')
-                    .replace(/^# (.*$)/gim, '<h1>$1</h1>')
-                    .replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>')
-                    .replace(/\*(.*?)\*/gim, '<em>$1</em>')
-                    .replace(/^- (.*$)/gim, '<ul><li>$1</li></ul>')
-                    .replace(/<\/ul>\n<ul>/gim, '')
-                    .replace(/\n\n/gim, '<br/><br/>') 
-                }}
+                dangerouslySetInnerHTML={{ __html: renderMarkdown(result.content) }}
               />
             </div>
           </>
@@ -266,7 +272,7 @@ export default function CreateResource() {
               <FilePlus2 className="w-8 h-8 opacity-50" />
             </div>
             <h3 className="text-xl font-bold text-foreground">Ready to generate</h3>
-            <p className="max-w-sm mt-2">Fill out the form on the left and hit generate to create your custom teaching resource.</p>
+            <p className="max-w-sm mt-2">Fill out the form on the left and hit Generate to create your custom teaching resource.</p>
           </div>
         )}
       </div>

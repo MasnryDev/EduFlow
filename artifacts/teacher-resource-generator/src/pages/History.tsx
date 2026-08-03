@@ -1,20 +1,29 @@
 import * as React from "react"
+import { marked } from "marked"
 import { useListResources, useDeleteResource, getListResourcesQueryKey } from "@workspace/api-client-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Select } from "@/components/ui/select"
 import { Skeleton } from "@/components/ui/skeleton"
-import { Search, Trash2, Copy, Eye, FileText } from "lucide-react"
-import { Link, useLocation } from "wouter"
+import { Search, Trash2, Copy, Eye, FileText, X } from "lucide-react"
+import { Link } from "wouter"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
 
 const RESOURCE_TYPES = ["All", "Lesson Plan", "Worksheet", "Assessment", "Classroom Activity", "PowerPoint Outline", "Curriculum Planner"]
 
+const selectCls = cn(
+  "flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm",
+  "transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
+  "disabled:cursor-not-allowed disabled:opacity-50"
+)
+
+function renderMarkdown(md: string): string {
+  return marked.parse(md, { async: false }) as string
+}
+
 export default function History() {
-  const [location] = useLocation()
   const searchParams = new URLSearchParams(window.location.search)
   const initialId = searchParams.get("id")
 
@@ -75,6 +84,9 @@ export default function History() {
           <h1 className="text-3xl font-bold tracking-tight">Resource History</h1>
           <p className="text-muted-foreground mt-1">Browse, search and manage your generated materials.</p>
         </div>
+        <Link href="/create">
+          <Button>Create New Resource</Button>
+        </Link>
       </div>
 
       <div className="flex flex-col sm:flex-row gap-4">
@@ -87,10 +99,14 @@ export default function History() {
             className="pl-9"
           />
         </div>
-        <div className="w-full sm:w-48 shrink-0">
-          <Select value={resourceTypeFilter} onChange={(e) => setResourceTypeFilter(e.target.value)}>
+        <div className="w-full sm:w-52 shrink-0">
+          <select
+            className={selectCls}
+            value={resourceTypeFilter}
+            onChange={(e) => setResourceTypeFilter(e.target.value)}
+          >
             {RESOURCE_TYPES.map(rt => <option key={rt} value={rt}>{rt}</option>)}
-          </Select>
+          </select>
         </div>
       </div>
 
@@ -119,13 +135,14 @@ export default function History() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
-                  <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
+                  <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground" title="View">
                     <Eye className="w-4 h-4" />
                   </Button>
                   <Button 
                     variant="ghost" 
                     size="icon" 
                     className="text-muted-foreground hover:text-destructive"
+                    title="Delete"
                     onClick={(e) => handleDelete(resource.id, e)}
                   >
                     <Trash2 className="w-4 h-4" />
@@ -154,57 +171,52 @@ export default function History() {
         </div>
       )}
 
-      {/* Basic Custom Dialog for Viewer since Radix Dialog needs more boilerplate to look good inline */}
+      {/* Resource Viewer Modal */}
       {isViewerOpen && selectedResource && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 sm:p-6 backdrop-blur-sm animate-in fade-in duration-200">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 sm:p-6 backdrop-blur-sm animate-in fade-in duration-200"
+          onClick={(e) => { if (e.target === e.currentTarget) setIsViewerOpen(false) }}
+        >
           <div className="bg-background w-full max-w-4xl max-h-[90vh] rounded-xl shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
-            <div className="p-4 sm:p-6 border-b border-border flex justify-between items-start bg-secondary/10">
+            <div className="p-4 sm:p-6 border-b border-border flex justify-between items-start bg-secondary/10 shrink-0">
               <div>
-                <div className="flex gap-2 mb-2">
+                <div className="flex gap-2 mb-2 flex-wrap">
                   <Badge>{selectedResource.resourceType}</Badge>
                   <Badge variant="outline">{selectedResource.subject}</Badge>
+                  <Badge variant="outline">{selectedResource.yearLevel}</Badge>
                 </div>
                 <h2 className="text-xl sm:text-2xl font-bold">{selectedResource.title}</h2>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Created {new Date(selectedResource.createdAt).toLocaleDateString()}
+                </p>
               </div>
-              <button onClick={() => setIsViewerOpen(false)} className="p-2 hover:bg-muted rounded-full">
-                ✕
+              <button
+                onClick={() => setIsViewerOpen(false)}
+                className="p-2 hover:bg-muted rounded-full ml-4 shrink-0 transition-colors"
+                aria-label="Close"
+              >
+                <X className="w-4 h-4" />
               </button>
             </div>
-            <div className="flex-1 overflow-y-auto p-6 sm:p-8">
+            <div className="flex-1 overflow-y-auto p-6 sm:p-8 bg-background">
               <div 
                 className="prose prose-sm md:prose-base dark:prose-invert max-w-none prose-headings:font-bold prose-a:text-primary prose-strong:text-foreground prose-li:my-0.5"
-                dangerouslySetInnerHTML={{ 
-                  __html: selectedResource.aiResponse
-                    .replace(/^### (.*$)/gim, '<h3>$1</h3>')
-                    .replace(/^## (.*$)/gim, '<h2>$1</h2>')
-                    .replace(/^# (.*$)/gim, '<h1>$1</h1>')
-                    .replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>')
-                    .replace(/\*(.*?)\*/gim, '<em>$1</em>')
-                    .replace(/^- (.*$)/gim, '<ul><li>$1</li></ul>')
-                    .replace(/<\/ul>\n<ul>/gim, '')
-                    .replace(/\n\n/gim, '<br/><br/>') 
-                }}
+                dangerouslySetInnerHTML={{ __html: renderMarkdown(selectedResource.aiResponse) }}
               />
             </div>
-            <div className="p-4 border-t border-border bg-background flex justify-between items-center shrink-0">
-              <span className="text-sm text-muted-foreground hidden sm:block">
-                Created on {new Date(selectedResource.createdAt).toLocaleDateString()}
-              </span>
-              <div className="flex gap-2 w-full sm:w-auto">
-                <Button 
-                  variant="outline" 
-                  className="flex-1 sm:flex-none text-destructive hover:text-destructive hover:bg-destructive/10" 
-                  onClick={(e) => handleDelete(selectedResource.id, e as any)}
-                >
-                  <Trash2 className="w-4 h-4 mr-2" /> Delete
-                </Button>
-                <Button 
-                  className="flex-1 sm:flex-none" 
-                  onClick={() => handleCopy(selectedResource.aiResponse, selectedResource.title)}
-                >
-                  <Copy className="w-4 h-4 mr-2" /> Copy
-                </Button>
-              </div>
+            <div className="p-4 border-t border-border bg-background flex justify-end items-center gap-2 shrink-0">
+              <Button 
+                variant="outline"
+                className="text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/30"
+                onClick={(e) => handleDelete(selectedResource.id, e as any)}
+              >
+                <Trash2 className="w-4 h-4 mr-2" /> Delete
+              </Button>
+              <Button 
+                onClick={() => handleCopy(selectedResource.aiResponse, selectedResource.title)}
+              >
+                <Copy className="w-4 h-4 mr-2" /> Copy
+              </Button>
             </div>
           </div>
         </div>
