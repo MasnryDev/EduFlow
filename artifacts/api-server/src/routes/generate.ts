@@ -4,7 +4,9 @@ import { GenerateResourceBody, GenerateResourceResponse } from "@workspace/api-z
 
 const router: IRouter = Router();
 
-const OPENROUTER_MODEL = "google/gemma-4-31b-it:free";
+// This free endpoint is currently listed by OpenRouter as ZDR-compatible,
+// which matters when the user's OpenRouter account enforces Zero Data Retention.
+const OPENROUTER_MODEL = "qwen/qwen3.8-27b:free";
 
 function getOpenRouterClient(): OpenAI {
   if (!process.env.OPENROUTER_API_KEY) {
@@ -184,6 +186,8 @@ router.post("/generate", async (req, res): Promise<void> => {
       res.status(500).json({ error: "OpenRouter API key not configured. Please add your OPENROUTER_API_KEY secret." });
     } else if (err?.status === 429 || err?.code === "credit_balance_exhausted") {
       res.status(429).json({ error: "OpenRouter rate limit reached. Free models are not unlimited and may have daily or per-minute limits. Please try again shortly or choose another available free model." });
+    } else if (err?.status === 404 && (err?.message?.includes("ZDR violation") || err?.error?.metadata?.ineligibility_reasons?.some((reason: { reason?: string }) => reason.reason === "zdr-violation-by-account"))) {
+      res.status(422).json({ error: "This OpenRouter model is not allowed by your Zero Data Retention setting. OpenRouter's compatible free model is currently configured, or you can adjust the setting at openrouter.ai/settings/privacy." });
     } else if (err?.status === 401) {
       res.status(401).json({ error: "Invalid OpenRouter API key. Please check your OPENROUTER_API_KEY secret." });
     } else {
