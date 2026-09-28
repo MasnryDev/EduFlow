@@ -4,11 +4,22 @@ import { GenerateResourceBody, GenerateResourceResponse } from "@workspace/api-z
 
 const router: IRouter = Router();
 
-function getOpenAIClient(): OpenAI {
-  if (!process.env.OPENAI_API_KEY) {
-    throw new Error("OPENAI_API_KEY is not configured");
+const OPENROUTER_MODEL = "google/gemma-4-31b-it:free";
+
+function getOpenRouterClient(): OpenAI {
+  if (!process.env.OPENROUTER_API_KEY) {
+    throw new Error("OPENROUTER_API_KEY is not configured");
   }
-  return new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  return new OpenAI({
+    apiKey: process.env.OPENROUTER_API_KEY,
+    baseURL: "https://openrouter.ai/api/v1",
+    defaultHeaders: {
+      "HTTP-Referer": process.env.REPLIT_DEV_DOMAIN
+        ? `https://${process.env.REPLIT_DEV_DOMAIN}`
+        : "https://aiteacher.app",
+      "X-Title": "AI Teacher Resource Generator",
+    },
+  });
 }
 
 function buildPrompt(data: {
@@ -144,19 +155,19 @@ router.post("/generate", async (req, res): Promise<void> => {
   }
 
   try {
-    const openai = getOpenAIClient();
+    const openrouter = getOpenRouterClient();
     const prompt = buildPrompt(parsed.data);
     const title = generateTitle(parsed.data);
 
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+    const completion = await openrouter.chat.completions.create({
+      model: OPENROUTER_MODEL,
       messages: [
         {
           role: "user",
           content: prompt,
         },
       ],
-      max_tokens: 4000,
+      max_tokens: 8192,
       temperature: 0.7,
     });
 
@@ -169,12 +180,12 @@ router.post("/generate", async (req, res): Promise<void> => {
     res.json(GenerateResourceResponse.parse({ content, title }));
   } catch (err: any) {
     req.log.error({ err }, "AI generation failed");
-    if (err instanceof Error && err.message.includes("OPENAI_API_KEY")) {
-      res.status(500).json({ error: "OpenAI API key not configured. Please add your OPENAI_API_KEY secret." });
+    if (err instanceof Error && err.message.includes("OPENROUTER_API_KEY")) {
+      res.status(500).json({ error: "OpenRouter API key not configured. Please add your OPENROUTER_API_KEY secret." });
     } else if (err?.status === 429 || err?.code === "credit_balance_exhausted") {
-      res.status(402).json({ error: "Your OpenAI account has no credits remaining. Please add credits at platform.openai.com/settings/organization/billing to continue generating resources." });
+      res.status(429).json({ error: "OpenRouter rate limit reached. Free models are not unlimited and may have daily or per-minute limits. Please try again shortly or choose another available free model." });
     } else if (err?.status === 401) {
-      res.status(401).json({ error: "Invalid OpenAI API key. Please check your OPENAI_API_KEY secret." });
+      res.status(401).json({ error: "Invalid OpenRouter API key. Please check your OPENROUTER_API_KEY secret." });
     } else {
       res.status(500).json({ error: `AI generation failed: ${err instanceof Error ? err.message : "unknown error"}` });
     }
