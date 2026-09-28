@@ -126,7 +126,7 @@ export async function downloadWordDocument(input: ResourceExportInput) {
   }
 
   const document = new Document({
-    creator: "AI Teacher Resource Generator",
+    creator: "EduFlow",
     title: input.title,
     description: `${input.resourceType} for ${input.subject}, ${input.yearLevel}`,
     sections: [{ children }],
@@ -176,8 +176,8 @@ function parseSlides(content: string): Slide[] {
 export async function downloadPowerPoint(input: ResourceExportInput) {
   const presentation = new pptxgen()
   presentation.layout = "LAYOUT_WIDE"
-  presentation.author = "AI Teacher Resource Generator"
-  presentation.company = "AI Teacher Resource Generator"
+  presentation.author = "EduFlow"
+  presentation.company = "EduFlow"
   presentation.subject = `${input.subject} — ${input.yearLevel}`
   presentation.title = input.title
 

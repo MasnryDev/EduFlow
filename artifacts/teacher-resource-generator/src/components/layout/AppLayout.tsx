@@ -33,7 +33,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       <div className="p-6">
         <Link href="/dashboard" className="flex items-center gap-2 text-primary font-bold text-xl tracking-tight">
           <BookOpenCheck className="w-6 h-6" />
-          <span>AITeacher</span>
+          <span>EduFlow</span>
         </Link>
       </div>
       <div className="px-4 py-2 flex-1 flex flex-col gap-2">
@@ -79,7 +79,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       <div className="md:hidden fixed top-0 left-0 right-0 h-16 border-b border-border bg-background z-30 flex items-center justify-between px-4">
         <Link href="/dashboard" className="flex items-center gap-2 text-primary font-bold text-lg">
           <BookOpenCheck className="w-5 h-5" />
-          <span>AITeacher</span>
+          <span>EduFlow</span>
         </Link>
         <Button variant="ghost" size="icon" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
           {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}

@@ -24,7 +24,7 @@ function getOpenRouterClient(): OpenAI {
       "HTTP-Referer": process.env.REPLIT_DEV_DOMAIN
         ? `https://${process.env.REPLIT_DEV_DOMAIN}`
         : "https://aiteacher.app",
-      "X-Title": "AI Teacher Resource Generator",
+      "X-Title": "EduFlow",
     },
   });
 }

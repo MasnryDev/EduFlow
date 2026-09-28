@@ -25,7 +25,7 @@ export default function Landing() {
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2 text-primary font-bold text-xl tracking-tight">
             <BookOpenCheck className="w-6 h-6" />
-            <span>AITeacher</span>
+            <span>EduFlow</span>
           </div>
           <div className="flex items-center gap-4">
             <ModeToggle />
@@ -120,7 +120,7 @@ export default function Landing() {
         <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="flex items-center gap-2 text-foreground font-bold">
             <BookOpenCheck className="w-5 h-5 text-primary" />
-            <span>AITeacher</span>
+            <span>EduFlow</span>
           </div>
           <div className="flex gap-6 text-sm text-muted-foreground">
             <span className="cursor-pointer hover:text-primary transition-colors">Features</span>
