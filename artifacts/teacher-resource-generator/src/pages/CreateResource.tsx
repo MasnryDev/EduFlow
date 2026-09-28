@@ -8,8 +8,9 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { toast } from "sonner"
-import { Loader2, Copy, Save, Sparkles, RefreshCcw, FilePlus2 } from "lucide-react"
+import { Loader2, Copy, Save, Sparkles, RefreshCcw, FilePlus2, FileDown } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { downloadPowerPoint, downloadWordDocument } from "@/lib/exporters"
 
 const SUBJECTS = ["English", "Mathematics", "Science", "Humanities", "The Arts", "Technologies", "Health and Physical Education", "Languages"]
 const YEAR_LEVELS = ["Foundation", "Year 1", "Year 2", "Year 3", "Year 4", "Year 5", "Year 6", "Year 7", "Year 8", "Year 9", "Year 10", "Year 11", "Year 12"]
@@ -43,6 +44,7 @@ export default function CreateResource() {
   })
 
   const [result, setResult] = React.useState<{title: string, content: string, savedId: number | null} | null>(null)
+  const [isDownloading, setIsDownloading] = React.useState(false)
 
   const handleGenerate = (e?: React.FormEvent) => {
     if (e) e.preventDefault()
@@ -94,6 +96,36 @@ export default function CreateResource() {
     if (!result) return
     navigator.clipboard.writeText(`${result.title}\n\n${result.content}`)
     toast.success("Copied to clipboard")
+  }
+
+  const handleDownload = async () => {
+    if (!result) return
+    setIsDownloading(true)
+
+    const exportInput = {
+      title: result.title,
+      content: result.content,
+      resourceType: formData.resourceType,
+      subject: formData.subject,
+      yearLevel: formData.yearLevel,
+      topic: formData.topic,
+      duration: formData.duration,
+      difficulty: formData.difficulty,
+    }
+
+    try {
+      if (formData.resourceType === "PowerPoint Outline") {
+        await downloadPowerPoint(exportInput)
+        toast.success("PowerPoint downloaded")
+      } else {
+        await downloadWordDocument(exportInput)
+        toast.success("Word document downloaded")
+      }
+    } catch {
+      toast.error("Could not create the download. Please try again.")
+    } finally {
+      setIsDownloading(false)
+    }
   }
 
   return (
@@ -249,6 +281,16 @@ export default function CreateResource() {
                 <Button variant="outline" size="sm" onClick={() => handleGenerate()} title="Regenerate">
                   <RefreshCcw className="w-4 h-4 sm:mr-2" />
                   <span className="hidden sm:inline">Regenerate</span>
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleDownload}
+                  disabled={isDownloading}
+                  title={formData.resourceType === "PowerPoint Outline" ? "Download PowerPoint" : "Download Word document"}
+                >
+                  {isDownloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileDown className="w-4 h-4 sm:mr-2" />}
+                  <span className="hidden sm:inline">{formData.resourceType === "PowerPoint Outline" ? "PPTX" : "DOCX"}</span>
                 </Button>
                 <Button 
                   size="sm" 

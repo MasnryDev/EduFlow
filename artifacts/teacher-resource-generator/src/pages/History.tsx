@@ -6,10 +6,11 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
-import { Search, Trash2, Copy, Eye, FileText, X } from "lucide-react"
+import { Search, Trash2, Copy, Eye, FileText, X, FileDown, Loader2 } from "lucide-react"
 import { Link } from "wouter"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
+import { downloadPowerPoint, downloadWordDocument } from "@/lib/exporters"
 
 const RESOURCE_TYPES = ["All", "Lesson Plan", "Worksheet", "Assessment", "Classroom Activity", "PowerPoint Outline", "Curriculum Planner"]
 
@@ -31,6 +32,7 @@ export default function History() {
   const [resourceTypeFilter, setResourceTypeFilter] = React.useState("All")
   const [selectedResource, setSelectedResource] = React.useState<any | null>(null)
   const [isViewerOpen, setIsViewerOpen] = React.useState(false)
+  const [isDownloading, setIsDownloading] = React.useState(false)
 
   const queryParams = {
     search: search.length > 2 ? search : undefined,
@@ -70,6 +72,36 @@ export default function History() {
   const handleCopy = (content: string, title: string) => {
     navigator.clipboard.writeText(`${title}\n\n${content}`)
     toast.success("Copied to clipboard")
+  }
+
+  const handleDownload = async () => {
+    if (!selectedResource) return
+    setIsDownloading(true)
+
+    const exportInput = {
+      title: selectedResource.title,
+      content: selectedResource.aiResponse,
+      resourceType: selectedResource.resourceType,
+      subject: selectedResource.subject,
+      yearLevel: selectedResource.yearLevel,
+      topic: selectedResource.topic,
+      duration: selectedResource.duration,
+      difficulty: selectedResource.difficulty,
+    }
+
+    try {
+      if (selectedResource.resourceType === "PowerPoint Outline") {
+        await downloadPowerPoint(exportInput)
+        toast.success("PowerPoint downloaded")
+      } else {
+        await downloadWordDocument(exportInput)
+        toast.success("Word document downloaded")
+      }
+    } catch {
+      toast.error("Could not create the download. Please try again.")
+    } finally {
+      setIsDownloading(false)
+    }
   }
 
   const openViewer = (resource: any) => {
@@ -211,6 +243,14 @@ export default function History() {
                 onClick={(e) => handleDelete(selectedResource.id, e as any)}
               >
                 <Trash2 className="w-4 h-4 mr-2" /> Delete
+              </Button>
+              <Button
+                variant="outline"
+                onClick={handleDownload}
+                disabled={isDownloading}
+              >
+                {isDownloading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <FileDown className="w-4 h-4 mr-2" />}
+                Download {selectedResource.resourceType === "PowerPoint Outline" ? "PPTX" : "DOCX"}
               </Button>
               <Button 
                 onClick={() => handleCopy(selectedResource.aiResponse, selectedResource.title)}

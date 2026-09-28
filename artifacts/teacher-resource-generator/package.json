@@ -76,6 +76,8 @@
     "zod": "catalog:"
   },
   "dependencies": {
-    "marked": "^18.0.7"
+    "docx": "^9.7.2",
+    "marked": "^18.0.7",
+    "pptxgenjs": "^4.0.1"
   }
 }
