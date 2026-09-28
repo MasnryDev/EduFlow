@@ -4,9 +4,14 @@ import { GenerateResourceBody, GenerateResourceResponse } from "@workspace/api-z
 
 const router: IRouter = Router();
 
-// This free endpoint is currently listed by OpenRouter as ZDR-compatible,
-// which matters when the user's OpenRouter account enforces Zero Data Retention.
-const OPENROUTER_MODEL = "qwen/qwen3.8-27b:free";
+// These free endpoints are currently listed by OpenRouter as ZDR-compatible.
+// Keeping provider alternatives lets generation recover when one free endpoint
+// is temporarily rate-limited.
+const OPENROUTER_MODELS = [
+  "qwen/qwen3.8-27b:free",
+  "inclusionai/ling-3.0-flash-sante:free",
+  "inclusionai/ling-3.0-flash-fin:free",
+];
 
 function getOpenRouterClient(): OpenAI {
   if (!process.env.OPENROUTER_API_KEY) {
@@ -161,17 +166,51 @@ router.post("/generate", async (req, res): Promise<void> => {
     const prompt = buildPrompt(parsed.data);
     const title = generateTitle(parsed.data);
 
-    const completion = await openrouter.chat.completions.create({
-      model: OPENROUTER_MODEL,
-      messages: [
-        {
-          role: "user",
-          content: prompt,
-        },
-      ],
-      max_tokens: 8192,
-      temperature: 0.7,
-    });
+    let completion: any;
+    let lastModelError: unknown;
+
+    for (const [index, model] of OPENROUTER_MODELS.entries()) {
+      try {
+        completion = await openrouter.chat.completions.create({
+          model,
+          messages: [
+            {
+              role: "user",
+              content: prompt,
+            },
+          ],
+          max_tokens: 8192,
+          temperature: 0.7,
+        });
+        break;
+      } catch (modelError: any) {
+        lastModelError = modelError;
+        const isZdrBlocked =
+          modelError?.status === 404 &&
+          (modelError?.message?.includes("ZDR violation") ||
+            modelError?.error?.metadata?.ineligibility_reasons?.some(
+              (reason: { reason?: string }) =>
+                reason.reason === "zdr-violation-by-account",
+            ));
+        const isRateLimited =
+          modelError?.status === 429 ||
+          modelError?.code === "credit_balance_exhausted";
+        const hasFallback = index < OPENROUTER_MODELS.length - 1;
+
+        if ((!isZdrBlocked && !isRateLimited) || !hasFallback) {
+          throw modelError;
+        }
+
+        req.log.warn(
+          { model, err: modelError },
+          "OpenRouter model unavailable, trying fallback",
+        );
+      }
+    }
+
+    if (!completion) {
+      throw lastModelError ?? new Error("OpenRouter returned no completion");
+    }
 
     const content = completion.choices[0]?.message?.content;
     if (!content) {
