@@ -12,7 +12,11 @@ import { toast } from "sonner"
 import { cn } from "@/lib/utils"
 import { downloadPowerPoint, downloadWordDocument } from "@/lib/exporters"
 
-const RESOURCE_TYPES = ["All", "Lesson Plan", "Worksheet", "Assessment", "Classroom Activity", "PowerPoint Outline", "Curriculum Planner"]
+const RESOURCE_TYPES = ["All", "Lesson Plan", "Worksheet", "Assessment", "Classroom Activity", "PowerPoint Presentation", "PowerPoint Outline", "Curriculum Planner"]
+
+function isPowerPointResource(resourceType: string): boolean {
+  return resourceType === "PowerPoint Presentation" || resourceType === "PowerPoint Outline"
+}
 
 const selectCls = cn(
   "flex h-9 w-full rounded-md border border-input bg-background text-foreground px-3 py-1 text-sm shadow-sm",
@@ -90,7 +94,7 @@ export default function History() {
     }
 
     try {
-      if (selectedResource.resourceType === "PowerPoint Outline") {
+      if (isPowerPointResource(selectedResource.resourceType)) {
         await downloadPowerPoint(exportInput)
         toast.success("PowerPoint downloaded")
       } else {
@@ -250,7 +254,7 @@ export default function History() {
                 disabled={isDownloading}
               >
                 {isDownloading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <FileDown className="w-4 h-4 mr-2" />}
-                Download {selectedResource.resourceType === "PowerPoint Outline" ? "PPTX" : "DOCX"}
+                Download {isPowerPointResource(selectedResource.resourceType) ? "PPTX" : "DOCX"}
               </Button>
               <Button 
                 onClick={() => handleCopy(selectedResource.aiResponse, selectedResource.title)}

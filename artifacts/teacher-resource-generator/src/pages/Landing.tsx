@@ -14,7 +14,7 @@ export default function Landing() {
     { icon: BookOpenCheck, title: "Worksheet", description: "Engaging practice activities with progressive difficulty." },
     { icon: CheckSquare, title: "Assessment", description: "Rubrics and tests aligned to curriculum standards." },
     { icon: BrainCircuit, title: "Classroom Activity", description: "Interactive group tasks and discussion prompts." },
-    { icon: Presentation, title: "PowerPoint Outline", description: "Slide-by-slide content breakdowns ready to format." },
+    { icon: Presentation, title: "PowerPoint Presentation", description: "Complete, classroom-ready slide decks with teacher notes." },
     { icon: CalendarDays, title: "Curriculum Planner", description: "Term overviews and sequence mapping." },
   ]
 

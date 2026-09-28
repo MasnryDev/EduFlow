@@ -80,16 +80,24 @@ Include a mix of question types: multiple choice, short answer, fill-in-the-blan
 - Differentiation Options
 - Assessment Suggestions`,
 
-    "PowerPoint Outline": `Create a detailed PowerPoint presentation outline with:
-- Slide 1: Title Slide (title, subject, year level)
-- Slide 2: Learning Objectives (dot points)
-- Slide 3-4: Prior Knowledge / Warm-Up
-- Slides 5-10: Main Content (key concepts with suggested visuals, diagrams, and examples)
-- Slides 11-12: Practice Activities / Class Discussion
-- Slide 13: Summary / Key Takeaways
-- Slide 14: Assessment / Exit Ticket
-- Slide 15: Homework / Next Steps
-For each slide, specify: title, dot-point content, and suggested visuals or teacher notes.`,
+    "PowerPoint Presentation": `Create a complete, classroom-ready PowerPoint presentation — not an outline and not a planning document.
+Create exactly 15 slides:
+ - Slide 1: Title Slide (presentation title, subject, year level, and topic)
+ - Slide 2: Learning Objectives
+ - Slides 3-4: Prior Knowledge / Warm-Up
+ - Slides 5-10: Main Content (key concepts, examples, explanations, and suggested diagrams)
+ - Slides 11-12: Practice Activities / Class Discussion
+ - Slide 13: Summary / Key Takeaways
+ - Slide 14: Assessment / Exit Ticket
+ - Slide 15: Homework / Next Steps
+
+Use this exact structure for every slide:
+Slide N: Clear slide title
+- On-slide content: concise student-facing text, dot points, examples, or questions
+- Suggested visual: a specific image, diagram, chart, or layout the teacher can use
+- Teacher notes: practical delivery guidance, misconceptions to address, and questions to ask
+
+Write content that can be placed directly on slides and used by a teacher without rewriting. Keep on-slide text concise, age-appropriate, and visually scannable. Do not include an introduction, outline summary, or commentary outside the numbered slides.`,
 
     "Curriculum Planner": `Create a detailed curriculum planning document with:
 - Unit Overview (3-4 week unit)
@@ -102,6 +110,8 @@ For each slide, specify: title, dot-point content, and suggested visuals or teac
 - Differentiation Strategies across the unit
 - Cross-curriculum Priorities and General Capabilities addressed`,
   };
+
+  resourceTypeFormatGuide["PowerPoint Outline"] = resourceTypeFormatGuide["PowerPoint Presentation"];
 
   const formatGuide = resourceTypeFormatGuide[data.resourceType] || `Create a well-structured ${data.resourceType} with clear headings, logical flow, and engaging content.`;
 
