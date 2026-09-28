@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { toast } from "sonner"
-import { Loader2, Copy, Save, Sparkles, RefreshCcw, FilePlus2, FileDown } from "lucide-react"
+import { Loader2, Copy, Save, Sparkles, RefreshCcw, FilePlus2, FileDown, Maximize2, X } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { downloadPowerPoint, downloadWordDocument } from "@/lib/exporters"
 
@@ -17,6 +17,11 @@ const YEAR_LEVELS = ["Foundation", "Year 1", "Year 2", "Year 3", "Year 4", "Year
 const RESOURCE_TYPES = ["Lesson Plan", "Worksheet", "Assessment", "Classroom Activity", "PowerPoint Outline", "Curriculum Planner"]
 const DURATIONS = ["30 minutes", "45 minutes", "60 minutes", "90 minutes", "2 hours", "Full day"]
 const DIFFICULTIES = ["Beginner", "Intermediate", "Advanced"]
+const GENERATION_STEPS = [
+  "Understanding your teaching brief",
+  "Aligning content to the Australian Curriculum",
+  "Structuring a classroom-ready resource",
+]
 
 const selectCls = cn(
   "flex h-9 w-full rounded-md border border-input bg-background text-foreground px-3 py-1 text-sm shadow-sm",
@@ -45,6 +50,32 @@ export default function CreateResource() {
 
   const [result, setResult] = React.useState<{title: string, content: string, savedId: number | null} | null>(null)
   const [isDownloading, setIsDownloading] = React.useState(false)
+  const [isPreviewOpen, setIsPreviewOpen] = React.useState(false)
+  const [loadingStep, setLoadingStep] = React.useState(0)
+
+  React.useEffect(() => {
+    if (!generateMutation.isPending) {
+      setLoadingStep(0)
+      return
+    }
+
+    const interval = window.setInterval(() => {
+      setLoadingStep((current) => (current + 1) % GENERATION_STEPS.length)
+    }, 1600)
+
+    return () => window.clearInterval(interval)
+  }, [generateMutation.isPending])
+
+  React.useEffect(() => {
+    if (!isPreviewOpen) return
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setIsPreviewOpen(false)
+    }
+
+    window.addEventListener("keydown", handleKeyDown)
+    return () => window.removeEventListener("keydown", handleKeyDown)
+  }, [isPreviewOpen])
 
   const handleGenerate = (e?: React.FormEvent) => {
     if (e) e.preventDefault()
@@ -59,6 +90,7 @@ export default function CreateResource() {
       {
         onSuccess: (data) => {
           setResult({ title: data.title, content: data.content, savedId: null })
+           setIsPreviewOpen(true)
           toast.success("Resource generated successfully!")
         },
         onError: (error: any) => {
@@ -257,10 +289,33 @@ export default function CreateResource() {
       {/* Right Column: Result Viewer */}
       <div className="lg:col-span-8 flex flex-col h-full overflow-hidden rounded-xl border border-border bg-card shadow-sm">
         {generateMutation.isPending ? (
-          <div className="flex-1 flex flex-col items-center justify-center p-8 text-center text-muted-foreground animate-pulse">
-            <Sparkles className="w-12 h-12 mb-4 text-primary opacity-50" />
-            <h3 className="text-xl font-bold text-foreground">Drafting your resource...</h3>
-            <p className="max-w-sm mt-2">Our AI is analysing the curriculum standards and structuring your {formData.resourceType.toLowerCase()}.</p>
+          <div className="relative flex-1 flex flex-col items-center justify-center overflow-hidden p-8 text-center">
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/30" />
+            <div className="relative w-24 h-24 mb-7">
+              <div className="absolute inset-0 rounded-full border-4 border-primary/15" />
+              <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-primary border-r-primary/60 animate-spin" />
+              <div className="absolute inset-4 rounded-full bg-primary/10 flex items-center justify-center">
+                <Sparkles className="w-8 h-8 text-primary animate-pulse" />
+              </div>
+            </div>
+            <div className="relative space-y-2">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">EduFlow is working</p>
+              <h3 className="text-2xl font-bold text-foreground">Creating your {formData.resourceType.toLowerCase()}</h3>
+              <p className="max-w-md min-h-6 mt-2 text-muted-foreground transition-all">
+                {GENERATION_STEPS[loadingStep]}...
+              </p>
+            </div>
+            <div className="relative mt-8 flex items-center gap-2" aria-label="Generation progress">
+              {GENERATION_STEPS.map((step, index) => (
+                <div
+                  key={step}
+                  className={cn(
+                    "h-1.5 w-12 rounded-full transition-colors",
+                    index <= loadingStep ? "bg-primary" : "bg-primary/15",
+                  )}
+                />
+              ))}
+            </div>
           </div>
         ) : result ? (
           <>
@@ -282,6 +337,10 @@ export default function CreateResource() {
                   <RefreshCcw className="w-4 h-4 sm:mr-2" />
                   <span className="hidden sm:inline">Regenerate</span>
                 </Button>
+                <Button variant="outline" size="sm" onClick={() => setIsPreviewOpen(true)} title="Open full preview">
+                  <Maximize2 className="w-4 h-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Preview</span>
+                </Button>
                 <Button
                   variant="outline"
                   size="sm"
@@ -298,7 +357,7 @@ export default function CreateResource() {
                   disabled={!!result.savedId || createMutation.isPending}
                 >
                   {createMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4 sm:mr-2" />}
-                  <span className="hidden sm:inline">{result.savedId ? "Saved" : "Save"}</span>
+                  <span className="hidden sm:inline">{result.savedId ? "Saved" : "Save Draft"}</span>
                 </Button>
               </div>
             </div>
@@ -319,6 +378,63 @@ export default function CreateResource() {
           </div>
         )}
       </div>
+
+      {isPreviewOpen && result && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/45 p-3 sm:p-6 backdrop-blur-sm animate-in fade-in duration-200"
+          onClick={(event) => {
+            if (event.target === event.currentTarget) setIsPreviewOpen(false)
+          }}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="resource-preview-title"
+            className="flex h-[min(900px,calc(100dvh-1.5rem))] w-full max-w-5xl flex-col overflow-hidden rounded-2xl border border-border bg-background shadow-2xl animate-in zoom-in-95 duration-200 sm:h-[min(860px,calc(100dvh-3rem))]"
+          >
+            <div className="flex shrink-0 items-start justify-between gap-4 border-b border-border bg-secondary/20 p-4 sm:p-6">
+              <div className="min-w-0">
+                <div className="mb-2 flex flex-wrap items-center gap-2">
+                  <Badge>{formData.resourceType === "PowerPoint Outline" ? "PPTX preview" : "DOCX preview"}</Badge>
+                  {!result.savedId && <Badge variant="outline" className="text-amber-500 border-amber-200 bg-amber-50 dark:bg-amber-950">Unsaved Draft</Badge>}
+                  {result.savedId && <Badge variant="success">Saved</Badge>}
+                </div>
+                <h2 id="resource-preview-title" className="truncate text-xl font-bold sm:text-2xl">{result.title}</h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Review your resource, save it to History, or download the finished file.
+                </p>
+              </div>
+              <Button variant="ghost" size="icon" onClick={() => setIsPreviewOpen(false)} aria-label="Close preview" className="shrink-0">
+                <X className="h-5 w-5" />
+              </Button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto bg-background p-5 sm:p-8">
+              <div
+                className="prose prose-sm max-w-none dark:prose-invert md:prose-base prose-headings:font-bold prose-a:text-primary prose-strong:text-foreground prose-li:my-0.5"
+                dangerouslySetInnerHTML={{ __html: renderMarkdown(result.content) }}
+              />
+            </div>
+
+            <div className="flex shrink-0 flex-wrap justify-end gap-2 border-t border-border bg-background p-3 sm:p-4">
+              <Button variant="outline" onClick={handleCopy}>
+                <Copy className="mr-2 h-4 w-4" /> Copy
+              </Button>
+              <Button variant="outline" onClick={() => handleGenerate()} disabled={generateMutation.isPending}>
+                <RefreshCcw className="mr-2 h-4 w-4" /> Regenerate
+              </Button>
+              <Button variant="outline" onClick={handleDownload} disabled={isDownloading}>
+                {isDownloading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileDown className="mr-2 h-4 w-4" />}
+                Download {formData.resourceType === "PowerPoint Outline" ? ".pptx" : ".docx"}
+              </Button>
+              <Button onClick={handleSave} disabled={!!result.savedId || createMutation.isPending}>
+                {createMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                {result.savedId ? "Saved" : "Save Draft"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
       
     </div>
   )
